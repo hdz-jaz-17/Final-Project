@@ -1,0 +1,129 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class InventoryManager {
+    private static ArrayList<String> inStock = new ArrayList<>();
+    private static String[] soldOut = new String[10]; 
+    private static final String FILE_STOCK = "stock.txt";
+    private static final String FILE_SOLDOUT = "soldout.txt";
+    
+    public static void main(String[] args) {
+        loadData(); 
+        Scanner scanner = new Scanner(System.in);
+        int choice;
+        
+        do {
+            System.out.println("\nInventory Management System");
+            System.out.println("1. Add Item to Stock");
+            System.out.println("2. Move Item to Sold-Out");
+            System.out.println("3. View Inventory");
+            System.out.println("4. Save and Exit");
+            choice = getUserInput(scanner);
+
+            switch (choice) {
+                case 1 -> addItem(scanner);
+                case 2 -> moveItem(scanner);
+                case 3 -> viewInventory();
+                case 4 -> saveData();
+                default -> System.out.println("Invalid choice, try again.");
+            }
+        } while (choice != 4);
+    }
+
+    private static int getUserInput(Scanner scanner) {
+        System.out.print("Enter your choice: ");
+        String input = scanner.next();
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input! Please enter a number.");
+            return getUserInput(scanner);
+        }
+    }
+
+    private static void addItem(Scanner scanner) {
+        System.out.print("Enter item name to add: ");
+        scanner.nextLine(); 
+        String item = scanner.nextLine();
+        inStock.add(item);
+        System.out.println("Item added!");
+    }
+
+    private static void moveItem(Scanner scanner) {
+        System.out.println("Enter item index to move to sold-out: ");
+        int index = getUserInput(scanner);
+        try {
+            if (index < 0 || index >= inStock.size()) {
+                System.out.println("Invalid index!");
+                return;
+            }
+            String item = inStock.remove(index);
+            for (int i = 0; i < soldOut.length; i++) {
+                if (soldOut[i] == null) {
+                    soldOut[i] = item;
+                    System.out.println("Item moved to Sold-Out list!");
+                    return;
+                }
+            }
+            System.out.println("Sold-out list is full!");
+        } catch (Exception e) {
+            System.out.println("Error moving item: " + e.getMessage());
+        }
+    }
+
+    private static void viewInventory() {
+        System.out.println("\nItems in Stock:");
+        for (int i = 0; i < inStock.size(); i++) {
+            System.out.println(i + ": " + inStock.get(i));
+        }
+
+        System.out.println("\nSold-Out Items:");
+        for (String item : soldOut) {
+            if (item != null) {
+                System.out.println(item);
+            }
+        }
+    }
+
+    private static void saveData() {
+        try (BufferedWriter writerStock = new BufferedWriter(new FileWriter(FILE_STOCK));
+             BufferedWriter writerSoldOut = new BufferedWriter(new FileWriter(FILE_SOLDOUT))) {
+            
+            for (String item : inStock) {
+                writerStock.write(item);
+                writerStock.newLine();
+            }
+
+            for (String item : soldOut) {
+                if (item != null) {
+                    writerSoldOut.write(item);
+                    writerSoldOut.newLine();
+                }
+            }
+            
+            System.out.println("Data saved successfully!");
+        } catch (IOException e) {
+            System.out.println("Error saving data: " + e.getMessage());
+        }
+    }
+
+    private static void loadData() {
+        try (BufferedReader readerStock = new BufferedReader(new FileReader(FILE_STOCK));
+             BufferedReader readerSoldOut = new BufferedReader(new FileReader(FILE_SOLDOUT))) {
+            
+            String line;
+            while ((line = readerStock.readLine()) != null) {
+                inStock.add(line);
+            }
+
+            int i = 0;
+            while ((line = readerSoldOut.readLine()) != null && i < soldOut.length) {
+                soldOut[i++] = line;
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error loading data: " + e.getMessage());
+        }
+    }
+}
